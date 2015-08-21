@@ -1,0 +1,21 @@
+{
+  "name": "hex2xterm",
+  "version": "0.0.0",
+  "description": "Convert hexadecimal colour codes to xterm colour codes",
+  "license": "WTFPL",
+  "bin": "./hex2xterm",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/davidchambers/hex2xterm.git"
+  },
+  "files": [
+    "hex2xterm"
+  ],
+  "dependencies": {
+    "chroma-js": "1.1.x",
+    "ramda": "0.17.x"
+  },
+  "devDependencies": {
+    "xyz": "0.5.x"
+  }
+}

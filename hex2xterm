@@ -1,0 +1,76 @@
+#!/usr/bin/env node
+
+'use strict';
+
+var chroma = require('chroma-js');
+var R = require('ramda');
+
+
+var _ = R.__;
+
+var fst = R.nthArg(0);
+var snd = R.nthArg(1);
+
+//  combine3 :: ([a] -> [a] -> [(a,a)]) -> [a] -> [(a,a,a)]
+var combine3 =
+R.pipe(R.converge(R.call, fst, R.converge(R.call, fst, snd, snd), snd),
+       R.map(R.flatten));
+
+//  dist :: (Number,Number,Number) -> (Number,Number,Number) -> Number
+var dist =
+R.pipe(R.zipWith(R.subtract),
+       R.map(R.converge(R.multiply, R.identity, R.identity)),
+       R.sum);
+
+//  xterm16 :: [(Number,Number,Number)]
+var xterm16 = [
+  [0x00, 0x00, 0x00],
+  [0x80, 0x00, 0x00],
+  [0x00, 0x80, 0x00],
+  [0x80, 0x80, 0x00],
+  [0x00, 0x00, 0x80],
+  [0x80, 0x00, 0x80],
+  [0x00, 0x80, 0x80],
+  [0xC0, 0xC0, 0xC0],
+  [0x80, 0x80, 0x80],
+  [0xFF, 0x00, 0x00],
+  [0x00, 0xFF, 0x00],
+  [0xFF, 0xFF, 0x00],
+  [0x00, 0x00, 0xFF],
+  [0xFF, 0x00, 0xFF],
+  [0x00, 0xFF, 0xFF],
+  [0xFF, 0xFF, 0xFF],
+];
+
+//  colours :: [{ xterm :: String, lab :: (Number,Number,Number) }]
+var colours = R.pipe(
+  R.reduce(R.concat, []),
+  R.zip(R.range(0, 256)),
+  R.map(R.converge(R.merge,
+                   R.pipe(R.nth(0),
+                          String,
+                          R.concat('000'),
+                          R.takeLast(3),
+                          R.createMapEntry('xterm')),
+                   R.pipe(R.nth(1),
+                          chroma.rgb,
+                          R.invoker(0, 'lab'),
+                          R.createMapEntry('lab'))))
+)([
+  xterm16,
+  combine3(R.xprod, [0x00, 0x5F, 0x87, 0xAF, 0xD7, 0xFF]),
+  combine3(R.zip, R.map(R.compose(R.add(8), R.multiply(10)), R.range(0, 24))),
+]);
+
+R.pipe(
+  R.drop(2),
+  R.filter(R.test(/^#?[0-9A-F]{6}$/i)),
+  R.map(chroma),
+  R.map(R.invoker(0, 'lab')),
+  R.map(dist),
+  R.map(R.curryN(2, R.pipe)(R.prop('lab'))),
+  R.map(R.minBy),
+  R.map(R.reduce(_, colours[0], colours)),
+  R.map(R.prop('xterm')),
+  R.forEach(console.log)
+)(process.argv);
