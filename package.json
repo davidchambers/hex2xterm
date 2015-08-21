@@ -1,6 +1,6 @@
 {
   "name": "hex2xterm",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Convert hexadecimal colour codes to xterm colour codes",
   "license": "WTFPL",
   "bin": "./hex2xterm",
